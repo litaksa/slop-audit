@@ -17,16 +17,13 @@
     -webkit-font-smoothing:antialiased;
     background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(27,29,26,.035) 31px 32px)}
   .wrap{max-width:1140px;margin:0 auto;padding:28px 20px 80px}
-
   .head{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:24px}
   .title{font-size:clamp(32px,6.5vw,58px);line-height:.95;letter-spacing:-.02em;margin:0;font-weight:400}
   .title em{font-style:normal;background:var(--marker);padding:0 .12em;
     box-decoration-break:clone;-webkit-box-decoration-break:clone}
   .sub{margin:10px 0 0;max-width:62ch;color:var(--ink-soft);font-size:16px}
-
   .cols{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
   @media (max-width:940px){.cols{grid-template-columns:minmax(0,1fr);gap:22px}}
-
   .sheet{background:#fff;border:1px solid var(--rule);box-shadow:3px 3px 0 var(--paper-2)}
   .sheet-head{display:flex;border-bottom:1px solid var(--rule);background:var(--paper-2)}
   .tab{appearance:none;border:0;background:transparent;font:inherit;font-size:15px;padding:10px 14px;
@@ -55,10 +52,8 @@
   fieldset{border:0;padding:0;margin:14px 0 0}
   legend{font-size:14px;color:var(--ink-soft);padding:0 0 6px}
   label.opt{display:inline-flex;align-items:center;gap:6px;font-size:15px;margin-right:14px}
-
   .blank{border:1px dashed var(--rule);padding:36px 24px;color:var(--ink-soft);font-size:16px}
   .blank p{margin:0 0 10px} .blank p:last-child{margin:0}
-
   .verdict{position:relative;border:1px solid var(--rule);background:#fff;padding:22px 20px 20px;
     box-shadow:3px 3px 0 var(--paper-2)}
   .score{font-family:var(--mono);font-size:56px;line-height:1;letter-spacing:-.04em;margin:0}
@@ -74,10 +69,8 @@
   .tick{flex:1;background:var(--rule);height:9px}
   .tick.on{height:22px}
   .scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
-
   h2.part{font-size:15px;font-weight:400;color:var(--ink-soft);margin:26px 0 8px;
     border-bottom:1px solid var(--rule);padding-bottom:5px}
-
   ul.ledger{list-style:none;margin:0;padding:0}
   ul.ledger li{border-bottom:1px solid var(--rule);padding:11px 0;display:grid;
     grid-template-columns:minmax(0,1fr) 120px 52px;gap:12px;align-items:center}
@@ -92,7 +85,6 @@
   .bar i{display:block;height:100%;background:var(--ink)}
   .val{font-family:var(--mono);font-size:16px;text-align:right}
   .val.none{color:var(--ink-soft);font-size:13px}
-
   ol.findings{list-style:none;margin:0;padding:0}
   ol.findings li{border-bottom:1px solid var(--rule);padding:11px 0}
   .f-top{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
@@ -100,7 +92,6 @@
   .f-pts{font-family:var(--mono);font-size:13px;white-space:nowrap}
   .f-pts.up{color:var(--pen)} .f-pts.down{color:var(--clean)}
   .f-ev{margin:5px 0 0;font-size:14px;color:var(--ink-soft);font-family:var(--mono);word-break:break-word}
-
   .err{color:var(--pen);font-size:15px}
   .load{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
   .foot{margin-top:44px;border-top:2px solid var(--ink);padding-top:14px;font-size:14px;
@@ -109,13 +100,11 @@
   .foot p{margin:0 0 10px} .foot p:last-child{margin:0}
   code{font-family:var(--mono);font-size:13px;background:var(--paper-2);padding:1px 4px}
 </style>
-
 <div class="wrap">
   <header class="head">
     <h1 class="title">Slop <em>Audit</em></h1>
     <p class="sub">Checks a site, not a single article. It samples pages across the archive, scores each one, then looks at what they have in common — because the giveaway is rarely one page, it's the sameness across all of them.</p>
   </header>
-
   <div class="cols">
     <section>
       <div class="sheet">
@@ -123,7 +112,6 @@
           <button class="tab" id="tab-site" role="tab" aria-selected="true" aria-controls="pane-site">Scan a site</button>
           <button class="tab" id="tab-paste" role="tab" aria-selected="false" aria-controls="pane-paste">Paste articles</button>
         </div>
-
         <div class="pane" id="pane-site" role="tabpanel" aria-labelledby="tab-site">
           <input type="text" id="domain" placeholder="example.com" autocomplete="off" spellcheck="false">
           <fieldset>
@@ -134,12 +122,10 @@
           </fieldset>
           <p class="note">Pages come from the site's own sitemap, sampled across the whole archive rather than the newest few. Sites with no sitemap fall back to homepage links.</p>
         </div>
-
         <div class="pane" id="pane-paste" role="tabpanel" aria-labelledby="tab-paste" hidden>
           <textarea id="paste" placeholder="Paste several articles from the same site.&#10;&#10;Separate each one with three hyphens on their own line:&#10;---"></textarea>
           <p class="note">This tab never leaves your browser. Use it for sites behind a login, or when the scan comes back empty.</p>
         </div>
-
         <div class="sheet-foot">
           <span class="count" id="count">nothing yet</span>
           <div style="display:flex;gap:12px;align-items:center">
@@ -150,7 +136,6 @@
       </div>
       <p class="note" id="msg"></p>
     </section>
-
     <section id="out" aria-live="polite">
       <div class="blank">
         <p>The audit shows up here.</p>
@@ -158,16 +143,10 @@
       </div>
     </section>
   </div>
-
   <footer class="foot">
     <p><strong>This is not proof.</strong> No tool can establish that text was written by AI. A site run by people working from a template can score high, and edited AI content can score low.</p>
     <p>A handful of pages is also a sample, not the site. Treat a high score as a reason to read closely yourself, not as a conclusion.</p>
   </footer>
 </div>
-
-<script type="module">
-/* scoring + UI in original project file */
-import { boot } from "./app.js";
-boot();
-</script>
+<script type="module" src="./app.js"></script>
 </html>
