@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slop Audit — check a whole site</title>
+<meta name="description" content="Sample a site's pages and see which AI-writing patterns run across all of them.">
+<style>
+  :root{
+    --paper:#EDEFEA; --paper-2:#E3E6DF; --ink:#1B1D1A; --ink-soft:#5D625A;
+    --pen:#C8202C; --marker:#F2E14C; --clean:#1F6B3C; --rule:#C6CABF;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(27,29,26,.035) 31px 32px)}
+  .wrap{max-width:1140px;margin:0 auto;padding:28px 20px 80px}
+
+  .head{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:24px}
+  .title{font-size:clamp(32px,6.5vw,58px);line-height:.95;letter-spacing:-.02em;margin:0;font-weight:400}
+  .title em{font-style:normal;background:var(--marker);padding:0 .12em;
+    box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .sub{margin:10px 0 0;max-width:62ch;color:var(--ink-soft);font-size:16px}
+
+  .cols{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
+  @media (max-width:940px){.cols{grid-template-columns:minmax(0,1fr);gap:22px}}
+
+  .sheet{background:#fff;border:1px solid var(--rule);box-shadow:3px 3px 0 var(--paper-2)}
+  .sheet-head{display:flex;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+  .tab{appearance:none;border:0;background:transparent;font:inherit;font-size:15px;padding:10px 14px;
+    cursor:pointer;color:var(--ink-soft);border-bottom:2px solid transparent}
+  .tab[aria-selected="true"]{background:#fff;color:var(--ink);border-bottom-color:var(--pen)}
+  .tab:focus-visible{outline:2px solid var(--pen);outline-offset:-4px}
+  .pane{padding:16px}
+  input[type=text]{width:100%;border:0;border-bottom:1px solid var(--rule);padding:8px 0;
+    font-family:var(--mono);font-size:15px;background:transparent;color:var(--ink)}
+  input[type=text]:focus{outline:none;border-bottom-color:var(--pen)}
+  textarea{width:100%;min-height:260px;resize:vertical;border:0;padding:0;font-family:var(--serif);
+    font-size:15px;line-height:1.7;color:var(--ink);background:transparent}
+  textarea:focus{outline:none}
+  .note{font-size:14px;color:var(--ink-soft);margin:12px 0 0}
+  .sheet-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+    border-top:1px solid var(--rule);padding:12px 16px;background:var(--paper-2)}
+  .count{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  button.go{appearance:none;font:inherit;font-size:16px;cursor:pointer;background:var(--ink);
+    color:var(--paper);border:0;padding:9px 20px}
+  button.go:hover{background:var(--pen)}
+  button.go:disabled{opacity:.4;cursor:default}
+  button.go:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+  .link{background:none;border:0;font:inherit;font-size:14px;color:var(--ink-soft);
+    text-decoration:underline;cursor:pointer;padding:0}
+  .link:hover{color:var(--pen)}
+  fieldset{border:0;padding:0;margin:14px 0 0}
+  legend{font-size:14px;color:var(--ink-soft);padding:0 0 6px}
+  label.opt{display:inline-flex;align-items:center;gap:6px;font-size:15px;margin-right:14px}
+
+  .blank{border:1px dashed var(--rule);padding:36px 24px;color:var(--ink-soft);font-size:16px}
+  .blank p{margin:0 0 10px} .blank p:last-child{margin:0}
+
+  .verdict{position:relative;border:1px solid var(--rule);background:#fff;padding:22px 20px 20px;
+    box-shadow:3px 3px 0 var(--paper-2)}
+  .score{font-family:var(--mono);font-size:56px;line-height:1;letter-spacing:-.04em;margin:0}
+  .score span{font-size:19px;color:var(--ink-soft)}
+  .verdict-line{font-size:23px;margin:6px 0 0;line-height:1.2;max-width:34ch}
+  .host{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin:0 0 10px;word-break:break-all}
+  .stamp{position:absolute;top:14px;right:14px;transform:rotate(-7deg);border:3px double currentColor;
+    padding:5px 12px;font-size:14px;letter-spacing:.06em;font-family:var(--mono);color:var(--pen);
+    opacity:.92;max-width:44%;text-align:center}
+  @media (prefers-reduced-motion:no-preference){.stamp{animation:cap .35s cubic-bezier(.2,1.5,.4,1) both}}
+  @keyframes cap{from{transform:rotate(-7deg) scale(2.4);opacity:0}to{transform:rotate(-7deg) scale(1);opacity:.92}}
+  .ruler{display:flex;gap:2px;margin:18px 0 6px;height:22px;align-items:flex-end}
+  .tick{flex:1;background:var(--rule);height:9px}
+  .tick.on{height:22px}
+  .scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+
+  h2.part{font-size:15px;font-weight:400;color:var(--ink-soft);margin:26px 0 8px;
+    border-bottom:1px solid var(--rule);padding-bottom:5px}
+
+  ul.ledger{list-style:none;margin:0;padding:0}
+  ul.ledger li{border-bottom:1px solid var(--rule);padding:11px 0;display:grid;
+    grid-template-columns:minmax(0,1fr) 120px 52px;gap:12px;align-items:center}
+  @media (max-width:560px){ul.ledger li{grid-template-columns:minmax(0,1fr) 44px;row-gap:6px}
+    ul.ledger li .bar{grid-column:1/-1}}
+  .row-title{font-size:16px;line-height:1.3;margin:0;overflow:hidden;text-overflow:ellipsis}
+  .row-title a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+  .row-title a:hover{border-bottom-color:var(--pen);color:var(--pen)}
+  .row-note{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:3px 0 0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar{height:8px;background:var(--paper-2)}
+  .bar i{display:block;height:100%;background:var(--ink)}
+  .val{font-family:var(--mono);font-size:16px;text-align:right}
+  .val.none{color:var(--ink-soft);font-size:13px}
+
+  ol.findings{list-style:none;margin:0;padding:0}
+  ol.findings li{border-bottom:1px solid var(--rule);padding:11px 0}
+  .f-top{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+  .f-name{font-size:17px}
+  .f-pts{font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .f-pts.up{color:var(--pen)} .f-pts.down{color:var(--clean)}
+  .f-ev{margin:5px 0 0;font-size:14px;color:var(--ink-soft);font-family:var(--mono);word-break:break-word}
+
+  .err{color:var(--pen);font-size:15px}
+  .load{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
+  .foot{margin-top:44px;border-top:2px solid var(--ink);padding-top:14px;font-size:14px;
+    color:var(--ink-soft);max-width:72ch}
+  .foot strong{color:var(--ink);font-weight:400;background:var(--marker)}
+  .foot p{margin:0 0 10px} .foot p:last-child{margin:0}
+  code{font-family:var(--mono);font-size:13px;background:var(--paper-2);padding:1px 4px}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1 class="title">Slop <em>Audit</em></h1>
+    <p class="sub">Checks a site, not a single article. It samples pages across the archive, scores each one, then looks at what they have in common — because the giveaway is rarely one page, it's the sameness across all of them.</p>
+  </header>
+
+  <div class="cols">
+    <section>
+      <div class="sheet">
+        <div class="sheet-head" role="tablist">
+          <button class="tab" id="tab-site" role="tab" aria-selected="true" aria-controls="pane-site">Scan a site</button>
+          <button class="tab" id="tab-paste" role="tab" aria-selected="false" aria-controls="pane-paste">Paste articles</button>
+        </div>
+
+        <div class="pane" id="pane-site" role="tabpanel" aria-labelledby="tab-site">
+          <input type="text" id="domain" placeholder="example.com" autocomplete="off" spellcheck="false">
+          <fieldset>
+            <legend>How many pages to sample</legend>
+            <label class="opt"><input type="radio" name="n" value="4" checked> 4</label>
+            <label class="opt"><input type="radio" name="n" value="6"> 6</label>
+            <label class="opt"><input type="radio" name="n" value="8"> 8</label>
+          </fieldset>
+          <p class="note">Pages come from the site's own sitemap, sampled across the whole archive rather than the newest few. Sites with no sitemap fall back to homepage links.</p>
+        </div>
+
+        <div class="pane" id="pane-paste" role="tabpanel" aria-labelledby="tab-paste" hidden>
+          <textarea id="paste" placeholder="Paste several articles from the same site.&#10;&#10;Separate each one with three hyphens on their own line:&#10;---"></textarea>
+          <p class="note">This tab never leaves your browser. Use it for sites behind a login, or when the scan comes back empty.</p>
+        </div>
+
+        <div class="sheet-foot">
+          <span class="count" id="count">nothing yet</span>
+          <div style="display:flex;gap:12px;align-items:center">
+            <button class="link" id="example" hidden>Load example</button>
+            <button class="go" id="run">Scan site</button>
+          </div>
+        </div>
+      </div>
+      <p class="note" id="msg"></p>
+    </section>
+
+    <section id="out" aria-live="polite">
+      <div class="blank">
+        <p>The audit shows up here.</p>
+        <p>Every page gets its own score, then the site gets one. The site-level checks are the useful part: phrases repeated verbatim across articles, articles that all land at the same length, scores that cluster too tightly, missing bylines, and posts published in suspiciously tight bursts.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <p><strong>This is not proof.</strong> No tool can establish that text was written by AI. A site run by people working from a template can score high, and edited AI content can score low.</p>
+    <p>A handful of pages is also a sample, not the site. Treat a high score as a reason to read closely yourself, not as a conclusion.</p>
+  </footer>
+</div>
+
+<script type="module">
+/* scoring + UI in original project file */
+import { boot } from "./app.js";
+boot();
+</script>
+</html>
